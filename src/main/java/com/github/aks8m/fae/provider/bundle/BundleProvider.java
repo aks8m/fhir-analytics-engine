@@ -1,12 +1,13 @@
-package com.github.aks8m.fae.provider.immunization;
+package com.github.aks8m.fae.provider.bundle;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jaxrs.server.AbstractJaxRsResourceProvider;
 import ca.uhn.fhir.rest.annotation.*;
 import ca.uhn.fhir.rest.api.MethodOutcome;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.IdType;
-import org.hl7.fhir.r4.model.Immunization;
 import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,24 +16,26 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class ImmunizationProvider extends AbstractJaxRsResourceProvider<Immunization> {
+public class BundleProvider extends AbstractJaxRsResourceProvider<Bundle> {
 
-    private static Logger logger = LoggerFactory.getLogger(ImmunizationProvider.class);
+    private static Logger logger = LoggerFactory.getLogger(BundleProvider.class);
 
-    @Autowired
-    ImmunizationService service;
-
-    public ImmunizationProvider(FhirContext ctx) {
+    public BundleProvider(FhirContext ctx) {
         super(ctx);
     }
 
     @Override
-    public Class<Immunization> getResourceType() {
-        return Immunization.class;
+    public Class<Bundle> getResourceType() {
+        return Bundle.class;
     }
 
+    @Autowired
+    BundleService service;
+    @Autowired
+    TransactionService transactionService;
+
     @Create
-    public MethodOutcome createResource(@ResourceParam Immunization resource){
+    public MethodOutcome createResource(@ResourceParam Bundle resource){
 
         return new MethodOutcome()
                 .setCreated(true)
@@ -41,13 +44,13 @@ public class ImmunizationProvider extends AbstractJaxRsResourceProvider<Immuniza
     }
 
     @Read
-    public Immunization readResource(@IdParam IdType id){
+    public Bundle readResource(@IdParam IdType id){
 
         return this.service.get(id.getIdPart());
     }
 
     @Update
-    public MethodOutcome updateResource(@IdParam IdType id, @ResourceParam Immunization resource) {
+    public MethodOutcome updateResource(@IdParam IdType id, @ResourceParam Bundle resource) {
 
         resource.setId(new IdType(id.getIdPart()));
         return new MethodOutcome()
@@ -62,8 +65,13 @@ public class ImmunizationProvider extends AbstractJaxRsResourceProvider<Immuniza
     }
 
     @Search
-    public List<Immunization> searchResource() {
+    public List<Bundle> searchResource() {
 
         return this.service.search();
+    }
+
+    @Transaction
+    public Bundle transaction(@TransactionParam Bundle theInput) {
+        return this.transactionService.processTransaction(theInput);
     }
 }
